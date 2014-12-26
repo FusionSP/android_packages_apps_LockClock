@@ -40,25 +40,20 @@ import com.cyanogenmod.lockclock.misc.Constants;
 import com.cyanogenmod.lockclock.misc.Preferences;
 import com.cyanogenmod.lockclock.weather.WeatherUpdateService;
 
-public class WeatherPreferences extends PreferenceFragment implements
+public class WeatherSettingPreferences extends PreferenceFragment implements
         SharedPreferences.OnSharedPreferenceChangeListener {
-    private static final String TAG = "WeatherPreferences";
+    private static final String TAG = "WeatherSettingPreferences";
 
     private static final String[] LOCATION_PREF_KEYS = new String[] {
         Constants.WEATHER_USE_CUSTOM_LOCATION,
         Constants.WEATHER_CUSTOM_LOCATION_CITY
     };
-    private static final String[] WEATHER_REFRESH_KEYS = new String[] {
-        Constants.SHOW_WEATHER,
-        Constants.WEATHER_REFRESH_INTERVAL
-    };
+    private static final String WEATHER_REFRESH_KEYS =
+        Constants.WEATHER_REFRESH_INTERVAL;
 
     private CheckBoxPreference mUseCustomLoc;
     private EditTextPreference mCustomWeatherLoc;
-    private ListPreference mFontColor;
-    private ListPreference mTimestampFontColor;
     private CheckBoxPreference mUseMetric;
-    private IconSelectionPreference mIconSet;
     private CheckBoxPreference mUseCustomlocation;
 
     private Context mContext;
@@ -68,16 +63,15 @@ public class WeatherPreferences extends PreferenceFragment implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getPreferenceManager().setSharedPreferencesName(Constants.PREF_NAME);
-        addPreferencesFromResource(R.xml.preferences_weather);
+        addPreferencesFromResource(R.xml.preferences_settings_weather);
         mContext = getActivity();
         mResolver = mContext.getContentResolver();
+
+        getActivity().getActionBar().setTitle(getResources().getString(R.string.weather_category));
 
         // Load items that need custom summaries etc.
         mUseCustomLoc = (CheckBoxPreference) findPreference(Constants.WEATHER_USE_CUSTOM_LOCATION);
         mCustomWeatherLoc = (EditTextPreference) findPreference(Constants.WEATHER_CUSTOM_LOCATION_CITY);
-        mFontColor = (ListPreference) findPreference(Constants.WEATHER_FONT_COLOR);
-        mTimestampFontColor = (ListPreference) findPreference(Constants.WEATHER_TIMESTAMP_FONT_COLOR);
-        mIconSet = (IconSelectionPreference) findPreference(Constants.WEATHER_ICONS);
         mUseMetric = (CheckBoxPreference) findPreference(Constants.WEATHER_USE_METRIC);
         mUseCustomlocation = (CheckBoxPreference) findPreference(Constants.WEATHER_USE_CUSTOM_LOCATION);
 
@@ -100,8 +94,6 @@ public class WeatherPreferences extends PreferenceFragment implements
 
         getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
         updateLocationSummary();
-        updateFontColorsSummary();
-        updateIconSetSummary();
     }
 
     @Override
@@ -125,10 +117,6 @@ public class WeatherPreferences extends PreferenceFragment implements
             updateLocationSummary();
         }
 
-        if (pref == mIconSet) {
-            updateIconSetSummary();
-        }
-
         if (pref == mUseMetric) {
             // The display format of the temperatures have changed
             // Force a weather update to refresh the display
@@ -150,7 +138,7 @@ public class WeatherPreferences extends PreferenceFragment implements
             forceWeatherUpdate = true;
         }
 
-        if (key.equals(Constants.SHOW_WEATHER) || key.equals(Constants.WEATHER_REFRESH_INTERVAL)) {
+        if (key.equals(Constants.WEATHER_REFRESH_INTERVAL)) {
             needWeatherUpdate = true;
         }
 
@@ -159,7 +147,7 @@ public class WeatherPreferences extends PreferenceFragment implements
                     needWeatherUpdate + " force update "  + forceWeatherUpdate);
         }
 
-        if (Preferences.showWeather(mContext) && (needWeatherUpdate || forceWeatherUpdate)) {
+        if (needWeatherUpdate || forceWeatherUpdate) {
             Intent updateIntent = new Intent(mContext, WeatherUpdateService.class);
             if (forceWeatherUpdate) {
                 updateIntent.setAction(WeatherUpdateService.ACTION_FORCE_UPDATE);
@@ -206,20 +194,5 @@ public class WeatherPreferences extends PreferenceFragment implements
         builder.setNegativeButton(R.string.cancel, null);
         dialog = builder.create();
         dialog.show();
-    }
-
-    private void updateFontColorsSummary() {
-        if (mFontColor != null) {
-            mFontColor.setSummary(mFontColor.getEntry());
-        }
-        if (mTimestampFontColor != null) {
-            mTimestampFontColor.setSummary(mTimestampFontColor.getEntry());
-        }
-    }
-
-    private void updateIconSetSummary() {
-        if (mIconSet != null) {
-            mIconSet.setSummary(mIconSet.getEntry());
-        }
     }
 }
